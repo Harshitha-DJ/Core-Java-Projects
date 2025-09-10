@@ -1,0 +1,186 @@
+package com.gqt.corejava.Swingsss;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+
+public class QuizAppSwing extends JFrame implements ActionListener {
+
+    JLabel questionLabel, prizeLabel;
+    JRadioButton[] optionButtons;
+    JButton nextButton, lifelineButton, quitButton;
+    ButtonGroup bg;
+
+    String[] questions = {
+        "What is the capital of India?",
+        "Which planet is known as the Red Planet?",
+        "Which language is used for Android development?",
+        "Who is the father of Computers?",
+        "What is the national animal of India?",
+        "Which data structure uses FIFO?",
+        "Which company developed Java?",
+        "Which is the largest planet in our Solar System?",
+        "Which ocean is the largest?",
+        "What is the chemical formula of water?"
+    };
+
+    String[][] options = {
+        {"Mumbai", "Delhi", "Kolkata", "Chennai"},
+        {"Venus", "Mars", "Jupiter", "Saturn"},
+        {"Python", "Java", "C#", "PHP"},
+        {"Charles Babbage", "Alan Turing", "Edison", "Newton"},
+        {"Lion", "Elephant", "Tiger", "Peacock"},
+        {"Stack", "Queue", "Tree", "Graph"},
+        {"Microsoft", "Oracle", "Sun Microsystems", "IBM"},
+        {"Earth", "Mars", "Jupiter", "Saturn"},
+        {"Atlantic", "Indian", "Pacific", "Arctic"},
+        {"H2O", "O2", "CO2", "NaCl"}
+    };
+
+    int[] answers = {2, 2, 2, 1, 3, 2, 3, 3, 3, 1};
+    int[] prizeLevels = {1000, 2000, 3000, 5000, 10000, 20000, 40000, 80000, 160000, 320000};
+
+    int currentQ = 0, prize = 0;
+    boolean audiencePollUsed = false, fiftyFiftyUsed = false;
+
+    public QuizAppSwing() {
+        setTitle("Quiz Game");
+        setSize(700, 400);
+        setLayout(new BorderLayout());
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // Question label
+        questionLabel = new JLabel();
+        questionLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        questionLabel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Prize label
+        prizeLabel = new JLabel("Prize: ₹0");
+        prizeLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        prizeLabel.setBorder(BorderFactory.createEmptyBorder(5, 20, 5, 20));
+
+        // Options
+        JPanel optionsPanel = new JPanel(new GridLayout(4, 1));
+        optionButtons = new JRadioButton[4];
+        bg = new ButtonGroup();
+        for (int i = 0; i < 4; i++) {
+            optionButtons[i] = new JRadioButton();
+            optionButtons[i].setFont(new Font("Arial", Font.PLAIN, 14));
+            bg.add(optionButtons[i]);
+            optionsPanel.add(optionButtons[i]);
+        }
+
+        // Buttons
+        nextButton = new JButton("Next");
+        lifelineButton = new JButton("Lifeline");
+        quitButton = new JButton("Quit");
+
+        nextButton.addActionListener(this);
+        lifelineButton.addActionListener(this);
+        quitButton.addActionListener(this);
+
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.add(nextButton);
+        bottomPanel.add(lifelineButton);
+        bottomPanel.add(quitButton);
+
+        add(questionLabel, BorderLayout.NORTH);
+        add(optionsPanel, BorderLayout.CENTER);
+        add(bottomPanel, BorderLayout.SOUTH);
+        add(prizeLabel, BorderLayout.EAST);
+
+        displayQuestion();
+        setVisible(true);
+    }
+
+    void displayQuestion() {
+        bg.clearSelection();
+        for (int i = 0; i < 4; i++) {
+            optionButtons[i].setEnabled(true); // Reset any disabled options
+            optionButtons[i].setSelected(false);
+            optionButtons[i].setText(options[currentQ][i]);
+        }
+        questionLabel.setText("Q" + (currentQ + 1) + ": " + questions[currentQ]);
+        prizeLabel.setText("Prize: ₹" + prize);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == nextButton) {
+            int selected = -1;
+            for (int i = 0; i < 4; i++) {
+                if (optionButtons[i].isSelected()) {
+                    selected = i + 1;
+                }
+            }
+            if (selected == -1) {
+                JOptionPane.showMessageDialog(this, "Please select an answer!");
+                return;
+            }
+
+            if (selected == answers[currentQ]) {
+                prize = prizeLevels[currentQ];
+                JOptionPane.showMessageDialog(this, "Correct! You won ₹" + prize);
+            } else {
+                int safePrize = 0;
+                if (currentQ >= 7) safePrize = prizeLevels[6];
+                else if (currentQ >= 5) safePrize = prizeLevels[4];
+                JOptionPane.showMessageDialog(this, "Wrong answer! Game Over. You won ₹" + safePrize);
+                System.exit(0);
+            }
+
+            currentQ++;
+            if (currentQ == questions.length) {
+                JOptionPane.showMessageDialog(this, "Congratulations! You completed the quiz. Total Prize: ₹" + prize);
+                System.exit(0);
+            }
+            displayQuestion();
+        }
+
+        else if (e.getSource() == lifelineButton) {
+            if (!audiencePollUsed || !fiftyFiftyUsed) {
+                String[] lifelines = {"Audience Poll", "50-50"};
+                int choice = JOptionPane.showOptionDialog(this, "Choose a lifeline", "Lifeline",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
+                        null, lifelines, lifelines[0]);
+
+                if (choice == -1) return; // User closed dialog
+
+                if (choice == 0 && !audiencePollUsed) {
+                    audiencePollUsed = true;
+                    StringBuilder result = new StringBuilder();
+                    for (int i = 0; i < 4; i++) {
+                        if (i == answers[currentQ] - 1)
+                            result.append(options[currentQ][i]).append(" : 70%\n");
+                        else
+                            result.append(options[currentQ][i]).append(" : ").append(10 + new Random().nextInt(21)).append("%\n");
+                    }
+                    JOptionPane.showMessageDialog(this, result.toString(), "Audience Poll", JOptionPane.INFORMATION_MESSAGE);
+                } else if (choice == 1 && !fiftyFiftyUsed) {
+                    fiftyFiftyUsed = true;
+                    java.util.List<Integer> indices = new ArrayList<>();
+                    for (int i = 0; i < 4; i++) indices.add(i);
+                    indices.remove(Integer.valueOf(answers[currentQ] - 1));
+                    Collections.shuffle(indices);
+                    optionButtons[indices.get(0)].setEnabled(false);
+                    optionButtons[indices.get(1)].setEnabled(false);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Lifeline already used!");
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "No lifelines left!");
+            }
+        }
+
+        else if (e.getSource() == quitButton) {
+            JOptionPane.showMessageDialog(this, "You quit the game. You won ₹" + prize);
+            System.exit(0);
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(QuizAppSwing::new);
+    }
+}
+
+
